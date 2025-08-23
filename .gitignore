@@ -1,0 +1,22 @@
+# Archivos de compilación emu8086
+*.exe
+*.com
+*.obj
+*.lst
+*.map
+
+# Archivos temporales de emu8086
+*.~asm
+*.bak
+
+# Archivos del sistema
+Thumbs.db
+.DS_Store
+
+# Archivos de Office temporales
+~$*.docx
+~$*.xlsx
+
+# Logs y depuración
+*.log
+debug/
