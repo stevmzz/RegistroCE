@@ -4,8 +4,8 @@ rem    Compiler para RegistroCE
 rem ===============================
 
 echo Compilando archivos ASM...
-MASM.EXE main.asm;
-MASM.EXE io.asm;
+MASM.EXE asm/main.asm;
+MASM.EXE asm/io.asm;
 
 echo Enlazando objetos...
 LINK main.obj io.obj;
