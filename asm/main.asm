@@ -29,7 +29,7 @@ EXTRN imprimir_cadena:PROC
     ; === VARIABLES DEL SISTEMA ===
     opcion_elegida db ?
 
-; Hacemos públicas las variables para que subrutinas las usen
+; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
 PUBLIC opcion_elegida
 
@@ -40,6 +40,7 @@ main proc
 
     call mostrar_titulo
 
+; etiqueta del menu principal
 menu_principal:
     call salto_linea
     call mostrar_menu
@@ -47,6 +48,7 @@ menu_principal:
     call mostrar_mensaje_prompt
     call leer_opcion
 
+    ; evaluar opcion elegida
     cmp opcion_elegida, '1'
     je ingresar_estudiantes
 
@@ -66,18 +68,23 @@ menu_principal:
     call opcion_invalida
     jmp menu_principal
 
+; etiqueta para ingresar estudiantes: FALTA IMPLEMENTAR
 ingresar_estudiantes:
     jmp menu_principal
 
+; etiqueta para mostrar estadisticas: FALTA IMPLEMENTAR
 mostrar_estadisticas:
     jmp menu_principal
 
+; etiqueta para buscar estudiante: FALTA IMPLEMENTAR
 buscar_estudiante:
     jmp menu_principal
 
+; etiqueta para ordenar calificaciones: FALTA IMPLEMENTAR
 ordenar_calificaciones:
     jmp menu_principal
 
+; etiqueta para salir del programa
 salir_programa:
     mov ax, 4c00h
     int 21h
