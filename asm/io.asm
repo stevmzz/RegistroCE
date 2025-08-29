@@ -7,6 +7,8 @@
 EXTRN opcion_elegida:BYTE
 EXTRN titulo:BYTE
 EXTRN linea:BYTE
+EXTRN linea_fina:BYTE
+EXTRN linea_doble:BYTE
 EXTRN opciones:BYTE
 EXTRN opcion1:BYTE
 EXTRN opcion2:BYTE
@@ -14,6 +16,11 @@ EXTRN opcion3:BYTE
 EXTRN opcion4:BYTE
 EXTRN opcion5:BYTE
 EXTRN opcion:BYTE
+EXTRN banner_l1:BYTE
+EXTRN banner_l2:BYTE
+EXTRN banner_l3:BYTE
+EXTRN banner_l4:BYTE
+EXTRN banner_l5:BYTE
 
 .data
     incorrecta db 13,10, "Opcion no valida, presione cualquier tecla para continuar...$"
@@ -26,6 +33,7 @@ PUBLIC opcion_invalida
 PUBLIC mostrar_titulo
 PUBLIC mostrar_menu
 PUBLIC mostrar_mensaje_prompt
+PUBLIC mostrar_banner
 
 ; === SUBRUTINAS ===
 
@@ -48,6 +56,11 @@ leer_opcion proc
     mov ah, 01h
     int 21h
     mov opcion_elegida, al
+    call salto_linea
+    call salto_linea
+    ; imprime linea
+    lea dx, linea_fina
+    call imprimir_cadena
     ret
 leer_opcion endp
 
@@ -59,7 +72,11 @@ opcion_invalida proc
     ; esperar cualquier tecla
     mov ah, 08h
     int 21h
-    ; regresar al menu principal
+    call salto_linea
+    call salto_linea
+    ; mostrar linea
+    lea dx, linea_fina
+    call imprimir_cadena
     ret
 opcion_invalida endp
 
@@ -90,6 +107,12 @@ mostrar_menu proc
     lea dx, opcion5
     call imprimir_cadena
 
+    call salto_linea
+    call salto_linea
+
+    lea dx, linea_fina
+    call imprimir_cadena
+
     ret
 mostrar_menu endp
 
@@ -99,5 +122,22 @@ mostrar_mensaje_prompt proc
     call imprimir_cadena
     ret
 mostrar_mensaje_prompt endp
+
+; subrutina para mostrar el banner del programa
+mostrar_banner proc
+    call salto_linea
+    lea dx, banner_l1
+    call imprimir_cadena
+    lea dx, banner_l2
+    call imprimir_cadena
+    lea dx, banner_l3
+    call imprimir_cadena
+    lea dx, banner_l4
+    call imprimir_cadena
+    lea dx, banner_l5
+    call imprimir_cadena
+    call salto_linea
+    ret
+mostrar_banner endp
 
 end
