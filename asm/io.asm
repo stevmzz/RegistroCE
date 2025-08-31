@@ -24,6 +24,7 @@ EXTRN banner_l5:BYTE
 
 .data
     incorrecta db 13,10, "Opcion no valida, presione cualquier tecla para continuar...$"
+    continuar db 13,10, "Presione cualquier tecla para continuar...$"
 
 .code
 PUBLIC imprimir_cadena
@@ -34,6 +35,7 @@ PUBLIC mostrar_titulo
 PUBLIC mostrar_menu
 PUBLIC mostrar_mensaje_prompt
 PUBLIC mostrar_banner
+PUBLIC presionar_continuar
 
 ; === SUBRUTINAS ===
 
@@ -79,6 +81,22 @@ opcion_invalida proc
     call imprimir_cadena
     ret
 opcion_invalida endp
+
+; subrutina para volver al menu principal precionando cualquier tecla
+presionar_continuar proc
+    ; mostrar mensaje
+    lea dx, continuar
+    call imprimir_cadena
+    ; esperar cualquier tecla
+    mov ah, 08h
+    int 21h
+    call salto_linea
+    call salto_linea
+    ; mostrar linea
+    lea dx, linea_fina
+    call imprimir_cadena
+    ret
+presionar_continuar endp
 
 ; subrutina para mostrar titulo
 mostrar_titulo proc
