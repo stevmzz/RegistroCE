@@ -36,8 +36,8 @@ EXTRN opcion_invalida:PROC
 EXTRN presionar_continuar:PROC
 
 .data
-    exito db 13,10, "Registrado exitosamente$"
-    signo_prompt db 62,62,62," ","$"
+    signo_prompt db " ",62,62,62," ","$"
+    nota_temporal db 10 dup(0)     ; buffer temporal para la nota
 
 .code
 PUBLIC ingresar_calificaciones
@@ -57,6 +57,10 @@ bucle_ingreso:
     call imprimir_cadena
     call salto_linea
 
+    ; mostrar prompt con formato
+    lea dx, signo_prompt
+    call imprimir_cadena
+
     ; leer linea de entrada
     mov ah, 0Ah
     lea dx, buffer_entrada
@@ -71,22 +75,27 @@ bucle_ingreso:
     ; separar el entry del usuario
     call separar_nombre_nota
 
-    ; incrementar contador
+    ; verificar si el formato fue correcto
+    cmp al, 0FFh ; codigo de error
+    je bucle_ingreso ; si hay error, repetir
+
+    ; incrementar contador solo si todo fue exitoso
     inc byte ptr [contador_estudiantes]
 
-    ; mostrar mensaje de exito de guardado
-    lea dx, exito
+    ; mostrar mensaje de estudiante agregado correctamente
+    call salto_linea
+    lea dx, msg_estudiante_agregado
     call imprimir_cadena
-    call presionar_continuar
+    call salto_linea
 
     ; repetir hasta alcanzar el limite
     jmp bucle_ingreso
 
 ; etiqueta de salida
 salir:
+    call salto_linea
     lea dx, linea_fina
     call imprimir_cadena
-    call presionar_continuar
     ret
 
 ; etiqueta de limite alcanzado
@@ -106,7 +115,10 @@ separar_nombre_nota proc
     push di
     push cx
     push bx
-    push ax
+    push dx
+
+    ; inicializar codigo de retorno como exito
+    mov al, 0
 
 ; === VALIDAR FORMATO ===
 
@@ -115,7 +127,7 @@ separar_nombre_nota proc
     mov ch, 0 ; contador de caracteres
     mov bl, 0 ; inicializa contador auxiliar
 
-; valida que se ingrese una oración con 3 espacion
+; valida que se ingrese una oración con 3 espacios
 validar_espacios:
     ; si no se ingreso nada
     cmp cl, 0
@@ -137,9 +149,10 @@ siguiente:
 fin_validacion:
     cmp bl, 3
     je formato_ok
+    call salto_linea
     lea dx, msg_formato_incorrecto
     call imprimir_cadena
-    call presionar_continuar
+    mov al, 0FFh ; codigo de error
     jmp fin_sep
 
 ; === EXTRER NOMBRE Y NOTA ===
@@ -176,7 +189,7 @@ continuar_nombre:
     dec cl
     jmp extraer_nombre
 
-; === EXTRAER NOTA ===
+; === EXTRAER Y VALIDAR NOTA ===
 
 ; iniciar a extraer la nota
 iniciar_nota:
@@ -185,37 +198,160 @@ iniciar_nota:
     dec cl
     ; poner terminador null en el nombre
     mov byte ptr [di], 0
-    ; preparar para extraer nota
-    lea di, buffer_temp + 61 ; usar la parte del buffer para la nota
+    
+    ; preparar para extraer y validar nota
+    lea di, nota_temporal ; usar buffer temporal para la nota
+    mov bx, 0 ; limpiar contador
 
-; extraer la nota
+; extraer la nota a buffer temporal
 extraer_nota:
     cmp cl, 0 ; verificar si se llegó al final
-    je fin_extraccion
+    je validar_nota_extraida
     mov al, [si] ; cargar caracter actual
+    
+    ; verificar que solo sean digitos (0-9)
+    cmp al, '0'
+    jb caracter_invalido
+    cmp al, '9'
+    ja caracter_invalido
+    
+    ; caracter valido, copiarlo
     mov [di], al ; copiarlo
     inc si ; avanzar cadena
     inc di
+    inc bx ; incrementar contador de caracteres en nota
     dec cl ; decrementar contador
     jmp extraer_nota ; seguir copiando
 
-; finalizar extraccion
-fin_extraccion:
+; caracter no valido en la nota
+caracter_invalido:
+    call salto_linea
+    lea dx, msg_nota_invalida
+    call imprimir_cadena
+    mov al, 0FFh ; codigo de error
+    jmp fin_sep
+
+; validar la nota extraida
+validar_nota_extraida:
     ; poner terminador null en la nota
     mov byte ptr [di], 0
-    ; almacenar estudiante en arrays
+    
+    ; verificar que la nota no este vacia
+    cmp bx, 0
+    je nota_vacia
+    
+    ; convertir string de nota a numero y validar rango
+    call convertir_y_validar_nota
+    cmp al, 0FFh ; verificar codigo de error
+    je fin_sep ; si hay error, salir
+    
+    ; si llegamos aqui, todo es valido, almacenar estudiante
     call almacenar_estudiante
+    mov al, 0 ; codigo de exito
+    jmp fin_sep
+
+; nota vacia
+nota_vacia:
+    lea dx, msg_nota_invalida
+    call imprimir_cadena
+    call presionar_continuar
+    mov al, 0FFh ; codigo de error
+    jmp fin_sep
+
+; finalizar extraccion (no deberia llegar aqui normalmente)
+fin_extraccion:
+    lea dx, msg_formato_incorrecto
+    call imprimir_cadena
+    call presionar_continuar
+    mov al, 0FFh ; codigo de error
 
 ; fin de la separacion
 fin_sep:
-    pop ax
+    pop dx
     pop bx
     pop cx
     pop di
     pop si
-
     ret
 separar_nombre_nota endp
+
+; subrutina para convertir a string y validar rango
+convertir_y_validar_nota proc
+    push si
+    push bx
+    push cx
+    push dx
+
+    lea si, nota_temporal ; apuntar al inicio de la nota
+    mov bx, 0 ; acumulador para el numero
+    
+; convertir cada digito
+convertir_digito:
+    mov al, [si] ; cargar caracter actual
+    cmp al, 0 ; verificar fin de cadena
+    je validar_rango
+    
+    ; convertir caracter a numero
+    sub al, '0'
+    mov ah, 0 ; limpiar parte alta
+    
+    ; verificar overflow antes de multiplicar
+    cmp bx, 999 ; si ya es muy grande, error
+    ja numero_muy_grande
+    
+    ; multiplicar acumulador por 10
+    push ax
+    mov ax, bx
+    mov cx, 10
+    mul cx
+    mov bx, ax
+    pop ax
+    
+    ; sumar nuevo digito
+    add bx, ax
+    
+    ; verificar que no exceda 32767 (limite de word)
+    cmp bx, 32767
+    ja numero_muy_grande
+    
+    inc si ; avanzar al siguiente caracter
+    jmp convertir_digito
+
+; validar que el numero este en rango 0-100
+validar_rango:
+    ; verificar rango 0 <= nota <= 100
+    cmp bx, 0
+    jb nota_fuera_rango
+    cmp bx, 100
+    ja nota_fuera_rango
+    
+    ; numero valido, guardarlo
+    mov dx, bx ; guardar el numero convertido
+    mov al, 0 ; codigo de exito
+    jmp fin_conversion
+
+; numero demasiado grande durante conversion
+numero_muy_grande:
+    lea dx, msg_nota_invalida
+    call imprimir_cadena
+    call presionar_continuar
+    mov al, 0FFh ; codigo de error
+    jmp fin_conversion
+
+; nota fuera del rango 0-100
+nota_fuera_rango:
+    lea dx, msg_nota_invalida
+    call imprimir_cadena
+    call presionar_continuar
+    mov al, 0FFh ; codigo de error
+
+fin_conversion:
+    pop dx
+    pop cx
+    pop bx
+    pop si
+    ret
+convertir_y_validar_nota endp
 
 ; subrutina para almacenar estudiante en array
 almacenar_estudiante proc
@@ -258,14 +394,13 @@ copiar_nombre_loop:
 
     jmp copiar_nombre_loop
 
-; llenar nombre con espacios: "nombre apellido apellido                  "
+; llenar nombre con espacios
 llenar_espacios_nombre:
     mov al, ' '
 rellenar_nombre:
     cmp cx, 0 ; verificar si termina
     je nombre_copiado
     mov [di], al ; poner espacio
-    ; avanzar
     inc di
     dec cx
     jmp rellenar_nombre
@@ -276,14 +411,13 @@ nombre_copiado:
     ; === 2. ALMACENAR NOTA COMO STRING ===
 
     ; calcular posicion en array notas_str
-    ; formula: posicion = contador_estudiantes * NOTA_STR
     mov al, contador_estudiantes
     xor ah, ah
     mov bx, NOTA_STR
     mul bx
 
-    ; copiar nota string desde buffer_temp+61 a notas_str
-    lea si, buffer_temp + 61
+    ; copiar nota string desde nota_temporal a notas_str
+    lea si, nota_temporal
     lea di, notas_str
     add di, ax
 
@@ -323,13 +457,73 @@ rellenar_nota:
 
 ; al finalizar de copiar la nota
 nota_str_copiada:
+    
+    ; === 3. ALMACENAR NOTA COMO ENTERO (PARA CALCULOS) ===
+    ; convertir la nota ya validada a entero
+    
+    call convertir_nota_a_entero
+    
+    ; almacenar en array notas_int
+    mov al, contador_estudiantes
+    xor ah, ah
+    mov bx, 2 ; cada entrada son 2 bytes (word)
+    mul bx
+    mov si, ax ; guardar offset
+    
+    ; dx contiene el numero convertido de convertir_nota_a_entero
+    mov bx, si
+    mov word ptr [notas_int + bx], dx
+
     pop cx
     pop bx
     pop ax
     pop di
     pop si
-
     ret
 almacenar_estudiante endp
+
+; subrutina para convertir nota string a entero
+convertir_nota_a_entero proc
+    push si
+    push bx
+    push cx
+    push ax
+
+    lea si, nota_temporal ; apuntar al inicio de la nota
+    mov bx, 0 ; acumulador para el numero
+    
+; convertir cada digito a numero
+convertir_loop:
+    mov al, [si] ; cargar caracter actual
+    cmp al, 0 ; verificar fin de cadena
+    je conversion_terminada
+    
+    ; convertir caracter a numero
+    sub al, '0'
+    mov ah, 0 ; limpiar parte alta
+    
+    ; multiplicar acumulador por 10
+    push ax
+    mov ax, bx
+    mov cx, 10
+    mul cx
+    mov bx, ax
+    pop ax
+    
+    ; sumar nuevo digito
+    add bx, ax
+    
+    inc si ; avanzar al siguiente caracter
+    jmp convertir_loop
+
+conversion_terminada:
+    mov dx, bx ; retornar resultado en dx
+
+    pop ax
+    pop cx
+    pop bx
+    pop si
+    ret
+convertir_nota_a_entero endp
 
 end
