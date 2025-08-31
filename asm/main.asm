@@ -14,6 +14,7 @@ EXTRN leer_opcion:PROC
 EXTRN opcion_invalida:PROC
 EXTRN imprimir_cadena:PROC
 EXTRN mostrar_banner:PROC
+EXTRN ingresar_calificaciones:PROC
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -36,7 +37,7 @@ EXTRN mostrar_banner:PROC
     opcion1 db 13,10, "     ", 254, " [1] Ingresar calificaciones (max. 15)$"
     opcion2 db 13,10, "     ", 254, " [2] Mostrar estadisticas$"
     opcion3 db 13,10, "     ", 254, " [3] Buscar estudiante por posicion$"
-    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones (Asc/Desc)$"
+    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones$"
     opcion5 db 13,10, "     ", 254, " [5] Salir del programa$"
     opcion db " ",62,62,62, "  ", "Elija una opcion: $"
 
@@ -113,9 +114,7 @@ menu_principal:
 
 ; etiqueta para ingresar estudiantes: FALTA IMPLEMENTAR
 ingresar_estudiantes:
-    lea dx, mensaje1
-    call imprimir_cadena
-    call opcion_invalida
+    call ingresar_calificaciones
     jmp menu_principal
 
 ; etiqueta para mostrar estadisticas: FALTA IMPLEMENTAR
