@@ -36,7 +36,7 @@ EXTRN opcion_invalida:PROC
 EXTRN presionar_continuar:PROC
 
 .data
-    signo_prompt db 62,62,62," ","$"
+    signo_prompt db " ",62,62,62," ","$"
     nota_temporal db 10 dup(0)     ; buffer temporal para la nota
 
 .code
@@ -56,6 +56,10 @@ bucle_ingreso:
     lea dx, msg_ingresar_prompt
     call imprimir_cadena
     call salto_linea
+
+    ; mostrar prompt con formato
+    lea dx, signo_prompt
+    call imprimir_cadena
 
     ; leer linea de entrada
     mov ah, 0Ah
@@ -83,16 +87,15 @@ bucle_ingreso:
     lea dx, msg_estudiante_agregado
     call imprimir_cadena
     call salto_linea
-    call presionar_continuar
 
     ; repetir hasta alcanzar el limite
     jmp bucle_ingreso
 
 ; etiqueta de salida
 salir:
+    call salto_linea
     lea dx, linea_fina
     call imprimir_cadena
-    call presionar_continuar
     ret
 
 ; etiqueta de limite alcanzado
@@ -146,9 +149,9 @@ siguiente:
 fin_validacion:
     cmp bl, 3
     je formato_ok
+    call salto_linea
     lea dx, msg_formato_incorrecto
     call imprimir_cadena
-    call presionar_continuar
     mov al, 0FFh ; codigo de error
     jmp fin_sep
 
@@ -222,9 +225,9 @@ extraer_nota:
 
 ; caracter no valido en la nota
 caracter_invalido:
+    call salto_linea
     lea dx, msg_nota_invalida
     call imprimir_cadena
-    call presionar_continuar
     mov al, 0FFh ; codigo de error
     jmp fin_sep
 

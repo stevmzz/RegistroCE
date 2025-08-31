@@ -23,8 +23,8 @@ EXTRN banner_l4:BYTE
 EXTRN banner_l5:BYTE
 
 .data
-    incorrecta db 13,10, "Opcion no valida, presione cualquier tecla para continuar...$"
-    continuar db 13,10, "Presione cualquier tecla para continuar...$"
+    incorrecta db 13,10," ", "Opcion no valida, presione cualquier tecla para continuar...$"
+    continuar db 13,10," ", "Presione cualquier tecla para continuar...$"
 
 .code
 PUBLIC imprimir_cadena

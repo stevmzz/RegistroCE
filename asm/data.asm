@@ -27,11 +27,12 @@
     buffer_temp db 100 dup(0)
 
     ; === MENSAJES DE LA FUNCION INGRESAR ===
-    msg_ingresar_prompt db "Ingrese su estudiante o digite 9 para salir al menu principal", 13, 10, "$"
-    msg_estudiante_agregado db "Estudiante agregado correctamente.", 13, 10, "$"
-    msg_limite_alcanzado db "Limite de 15 estudiantes alcanzado.", 13, 10, "$"
-    msg_formato_incorrecto db "Formato incorrecto. Use: Nombre Apellido1 Apellido2 Nota", 13, 10, "$"
-    msg_nota_invalida db "Nota invalida. Debe estar entre 0 y 100.", 13, 10, "$"
+    msg_ingresar_prompt db 196,196,196,196,196,196,196, "[ Ingrese su estudiante o digite 9 para salir al menu principal ]", 196,196,196,196,196,196,196,196, "$"
+    ; === MENSJES DE AVISO ===
+    msg_estudiante_agregado db "               ",196,196,196,196,196,196,"[ ESTUDIANTE AGREGADO CORRECTAMENTE ]",196,196,196,196,196,196, "$"
+    msg_limite_alcanzado db "               ",196,196,196,196,196,196,"[ LIMITE DE 15 ESTUDIANTES ALCANZADO ]",196,196,196,196,196,196, 13, 10, "$"
+    msg_formato_incorrecto db "    ",196,196,196,196,196,196,"[ FORMATO INCORRECTO. USE: Nombre Apellido1 Apellido2 Nota ]",196,196,196,196,196,196, 13, 10, "$"
+    msg_nota_invalida db "            ",196,196,196,196,196,196,"[ NOTA INVALIDA. Debe estar entre 0 y 100 ]",196,196,196,196,196,196, 13, 10, "$"
 
 ; === VARIABLES PUBLICAS ===
 PUBLIC entry_estudiantes, nombres_completos, notas_str, notas_int
