@@ -42,7 +42,6 @@ EXTRN ingresar_calificaciones:PROC
     opcion db " ",62,62,62, "  ", "Elija una opcion: $"
 
     ; === BANNER ===
-    ; === BANNER R.CE ===
     banner_l1 db "                          ",219,219,219,219,219,219,207,157,157,157,157,157,219,219,219,219,219,219,207,219,219,219,219,219,219,219,207,13,10,"$"
     banner_l2 db "                          ",219,219,201,205,205,219,219,207,157,157,157,157,219,219,201,205,205,205,205,207,219,219,201,205,205,205,205,207,13,10,"$"
     banner_l3 db "                          ",219,219,219,219,219,219,201,157,157,157,157,157,219,219,186,157,157,157,157,157,219,219,219,219,219,219,219,186,13,10,"$"
@@ -52,16 +51,24 @@ EXTRN ingresar_calificaciones:PROC
     ; === MENSAJE DE DESPEDIDA ===
     mensaje_despedida db 13,10, "                      ","[ GRACIAS POR USAR REGISTRO.CE ]", 13,10, "$"
     
+    ; === MENSAJES ADICIONALES ===
+    msg_ordenar db 13,10, "Ordenar calificaciones en (A)scendente o (D)escendente? $"
+    msg_ordenado db 13,10, "Las calificaciones han sido ordenadas.$"
+
     ; === VARIABLES DEL SISTEMA ===
     opcion_elegida db ?
 
     ; === MENSAJES TEMPORALES ===
     mensaje1 db 13,10, "FUNCIONALIDAD NO IMPLEMENTADA$"
 
+    ; === VARIABLES PARA NOTAS ===
+    num_estudiantes db 0              ; cantidad de estudiantes ingresados
+    notas dw 15 dup(?)                ; arreglo de hasta 15 calificaciones (WORD = 2 bytes c/u)
+
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
 PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1
-
+PUBLIC num_estudiantes, notas
 
 .code
 main proc
@@ -112,30 +119,64 @@ menu_principal:
     call opcion_invalida
     jmp menu_principal
 
-; etiqueta para ingresar estudiantes: FALTA IMPLEMENTAR
+; etiqueta para ingresar estudiantes
 ingresar_estudiantes:
     call ingresar_calificaciones
     jmp menu_principal
 
-; etiqueta para mostrar estadisticas: FALTA IMPLEMENTAR
+; etiqueta para mostrar estadisticas
 mostrar_estadisticas:
     lea dx, mensaje1
     call imprimir_cadena
     call opcion_invalida
     jmp menu_principal
 
-; etiqueta para buscar estudiante: FALTA IMPLEMENTAR
+; etiqueta para buscar estudiante
 buscar_estudiante:
     lea dx, mensaje1
     call imprimir_cadena
     call opcion_invalida
     jmp menu_principal
 
-; etiqueta para ordenar calificaciones: FALTA IMPLEMENTAR
+; etiqueta para ordenar calificaciones
 ordenar_calificaciones:
-    lea dx, mensaje1
+    ; mostrar mensaje para elegir el tipo de ordenamiento
+    lea dx, msg_ordenar
     call imprimir_cadena
-    call opcion_invalida
+
+    ; leer opcion del usuario (A/D)
+    mov ah, 01h
+    int 21h
+
+    cmp al, 'A'
+    je ordenar_asc
+
+    cmp al, 'a'
+    je ordenar_asc
+
+    cmp al, 'D'
+    je ordenar_desc
+
+    cmp al, 'd'
+    je ordenar_desc
+
+    ; si no se elige A/D, volver al menu
+    jmp menu_principal
+
+; === ORDEN ASCENDENTE ===
+ordenar_asc:
+    call burbuja_asc
+    jmp mostrar_resultado
+
+; === ORDEN DESCENDENTE ===
+ordenar_desc:
+    call burbuja_desc
+    jmp mostrar_resultado
+
+; === MOSTRAR RESULTADO DEL ORDENAMIENTO ===
+mostrar_resultado:
+    lea dx, msg_ordenado
+    call imprimir_cadena
     jmp menu_principal
 
 ; etiqueta para salir del programa
@@ -153,4 +194,97 @@ salir_programa:
     int 21h
 
 main endp
+
+; =========================================================
+; SUBRUTINAS DE ORDENAMIENTO - ALGORITMO BURBUJA
+; =========================================================
+
+; --- BURBUJA ASCENDENTE ---
+; Ordena el arreglo "notas" de menor a mayor
+burbuja_asc proc
+    push cx
+    push bx
+    push si
+    push di
+    push ax
+
+    mov cl, num_estudiantes     ; número de estudiantes
+    dec cl                      ; n-1 pasadas
+    jz fin_burbuja_asc          ; si solo hay 1 estudiante, salir
+
+bucle_externo_asc:
+    mov si, 0                   ; índice = 0
+    mov ch, cl                  ; comparaciones en esta pasada
+
+bucle_interno_asc:
+    mov ax, notas[si]           ; ax = notas[i]
+    mov bx, notas[si+2]         ; bx = notas[i+1]
+    cmp ax, bx
+    jbe no_swap_asc             ; si notas[i] <= notas[i+1], no cambiar
+
+    ; --- swap ---
+    mov notas[si], bx
+    mov notas[si+2], ax
+
+no_swap_asc:
+    add si, 2                   ; siguiente par
+    dec ch
+    jnz bucle_interno_asc
+
+    dec cl
+    jnz bucle_externo_asc
+
+fin_burbuja_asc:
+    pop ax
+    pop di
+    pop si
+    pop bx
+    pop cx
+    ret
+burbuja_asc endp
+
+; --- BURBUJA DESCENDENTE ---
+; Ordena el arreglo "notas" de mayor a menor
+burbuja_desc proc
+    push cx
+    push bx
+    push si
+    push di
+    push ax
+
+    mov cl, num_estudiantes     ; número de estudiantes
+    dec cl                      ; n-1 pasadas
+    jz fin_burbuja_desc         ; si solo hay 1 estudiante, salir
+
+bucle_externo_desc:
+    mov si, 0                   ; índice = 0
+    mov ch, cl                  ; comparaciones en esta pasada
+
+bucle_interno_desc:
+    mov ax, notas[si]           ; ax = notas[i]
+    mov bx, notas[si+2]         ; bx = notas[i+1]
+    cmp ax, bx
+    jae no_swap_desc            ; si notas[i] >= notas[i+1], no cambiar
+
+    ; --- swap ---
+    mov notas[si], bx
+    mov notas[si+2], ax
+
+no_swap_desc:
+    add si, 2                   ; siguiente par
+    dec ch
+    jnz bucle_interno_desc
+
+    dec cl
+    jnz bucle_externo_desc
+
+fin_burbuja_desc:
+    pop ax
+    pop di
+    pop si
+    pop bx
+    pop cx
+    ret
+burbuja_desc endp
+
 end main
