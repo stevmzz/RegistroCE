@@ -15,6 +15,8 @@ EXTRN opcion_invalida:PROC
 EXTRN imprimir_cadena:PROC
 EXTRN mostrar_banner:PROC
 EXTRN ingresar_calificaciones:PROC
+EXTRN notas_int:BYTE
+EXTRN contador_estudiantes:BYTE
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -61,14 +63,9 @@ EXTRN ingresar_calificaciones:PROC
     ; === MENSAJES TEMPORALES ===
     mensaje1 db 13,10, "FUNCIONALIDAD NO IMPLEMENTADA$"
 
-    ; === VARIABLES PARA NOTAS ===
-    num_estudiantes db 0              ; cantidad de estudiantes ingresados
-    notas dw 15 dup(?)                ; arreglo de hasta 15 calificaciones (WORD = 2 bytes c/u)
-
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
 PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1
-PUBLIC num_estudiantes, notas
 
 .code
 main proc
@@ -208,26 +205,29 @@ burbuja_asc proc
     push di
     push ax
 
-    mov cl, num_estudiantes     ; número de estudiantes
-    dec cl                      ; n-1 pasadas
-    jz fin_burbuja_asc          ; si solo hay 1 estudiante, salir
+    mov cl, contador_estudiantes    ; número de estudiantes
+    dec cl                          ; n-1 pasadas
+    jz fin_burbuja_asc              ; si solo hay 1 estudiante, salir
 
 bucle_externo_asc:
-    mov si, 0                   ; índice = 0
-    mov ch, cl                  ; comparaciones en esta pasada
+    mov si, 0                       ; índice = 0
+    mov ch, cl                      ; comparaciones en esta pasada
 
 bucle_interno_asc:
-    mov ax, notas[si]           ; ax = notas[i]
-    mov bx, notas[si+2]         ; bx = notas[i+1]
-    cmp ax, bx
-    jbe no_swap_asc             ; si notas[i] <= notas[i+1], no cambiar
+    ; cargar notas_int[si] y notas_int[si+1]
+    mov bx, si
+    mov al, byte ptr [notas_int + bx]      ; al = notas_int[i]
+    mov dl, byte ptr [notas_int + bx + 1]  ; dl = notas_int[i+1]
+    
+    cmp al, dl
+    jbe no_swap_asc
 
     ; --- swap ---
-    mov notas[si], bx
-    mov notas[si+2], ax
+    mov byte ptr [notas_int + bx], dl
+    mov byte ptr [notas_int + bx + 1], al
 
 no_swap_asc:
-    add si, 2                   ; siguiente par
+    inc si                          ; siguiente índice
     dec ch
     jnz bucle_interno_asc
 
@@ -252,26 +252,28 @@ burbuja_desc proc
     push di
     push ax
 
-    mov cl, num_estudiantes     ; número de estudiantes
-    dec cl                      ; n-1 pasadas
-    jz fin_burbuja_desc         ; si solo hay 1 estudiante, salir
+    mov cl, contador_estudiantes    ; número de estudiantes
+    dec cl                          ; n-1 pasadas
+    jz fin_burbuja_desc             ; si solo hay 1 estudiante, salir
 
 bucle_externo_desc:
-    mov si, 0                   ; índice = 0
-    mov ch, cl                  ; comparaciones en esta pasada
+    mov si, 0                       ; índice = 0
+    mov ch, cl                      ; comparaciones en esta pasada
 
 bucle_interno_desc:
-    mov ax, notas[si]           ; ax = notas[i]
-    mov bx, notas[si+2]         ; bx = notas[i+1]
-    cmp ax, bx
-    jae no_swap_desc            ; si notas[i] >= notas[i+1], no cambiar
+    mov bx, si
+    mov al, byte ptr [notas_int + bx]      ; al = notas_int[i]
+    mov dl, byte ptr [notas_int + bx + 1]  ; dl = notas_int[i+1]
+    
+    cmp al, dl
+    jae no_swap_desc
 
     ; --- swap ---
-    mov notas[si], bx
-    mov notas[si+2], ax
+    mov byte ptr [notas_int + bx], dl
+    mov byte ptr [notas_int + bx + 1], al
 
 no_swap_desc:
-    add si, 2                   ; siguiente par
+    inc si                      ; siguiente par
     dec ch
     jnz bucle_interno_desc
 
