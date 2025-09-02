@@ -13,7 +13,7 @@ EXTRN NOTA_STR:ABS
 EXTRN entry_estudiantes:BYTE
 EXTRN nombres_completos:BYTE
 EXTRN notas_str:BYTE
-EXTRN notas_int:WORD
+EXTRN notas_int:BYTE
 
 EXTRN buffer_entrada:BYTE
 EXTRN buffer_temp:BYTE
@@ -252,9 +252,9 @@ validar_nota_extraida:
 
 ; nota vacia
 nota_vacia:
-    lea dx, msg_nota_invalida
+    call salto_linea
+    lea dx, msg_formato_incorrecto
     call imprimir_cadena
-    call presionar_continuar
     mov al, 0FFh ; codigo de error
     jmp fin_sep
 
@@ -332,17 +332,17 @@ validar_rango:
 
 ; numero demasiado grande durante conversion
 numero_muy_grande:
+    call salto_linea
     lea dx, msg_nota_invalida
     call imprimir_cadena
-    call presionar_continuar
     mov al, 0FFh ; codigo de error
     jmp fin_conversion
 
 ; nota fuera del rango 0-100
 nota_fuera_rango:
+    call salto_linea
     lea dx, msg_nota_invalida
     call imprimir_cadena
-    call presionar_continuar
     mov al, 0FFh ; codigo de error
 
 fin_conversion:
@@ -466,13 +466,13 @@ nota_str_copiada:
     ; almacenar en array notas_int
     mov al, contador_estudiantes
     xor ah, ah
-    mov bx, 2 ; cada entrada son 2 bytes (word)
+    mov bx, 1 ; cada entrada son 2 bytes (word)
     mul bx
     mov si, ax ; guardar offset
     
     ; dx contiene el numero convertido de convertir_nota_a_entero
     mov bx, si
-    mov word ptr [notas_int + bx], dx
+    mov byte ptr [notas_int + bx], dl
 
     pop cx
     pop bx

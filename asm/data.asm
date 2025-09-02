@@ -14,7 +14,7 @@
     entry_estudiantes db MAX_ESTUDIANTES * ENTRY_COMPLETO dup(0)
     nombres_completos db MAX_ESTUDIANTES * NOMBRE_COMPLETO dup(0)
     notas_str db MAX_ESTUDIANTES * NOTA_STR dup(0)
-    notas_int dw MAX_ESTUDIANTES dup(0)
+    notas_int db MAX_ESTUDIANTES dup(0)
 
     ; === VARIABLES DE CONTROL ===
     contador_estudiantes db 0
