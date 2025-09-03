@@ -17,6 +17,8 @@ EXTRN mostrar_banner:PROC
 EXTRN ingresar_calificaciones:PROC
 EXTRN notas_int:BYTE
 EXTRN contador_estudiantes:BYTE
+EXTRN buscar_estudiante_por_indice:PROC
+EXTRN signo_prompt:BYTE
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -39,7 +41,7 @@ EXTRN contador_estudiantes:BYTE
     opcion1 db 13,10, "     ", 254, " [1] Ingresar calificaciones (max. 15)$"
     opcion2 db 13,10, "     ", 254, " [2] Mostrar estadisticas$"
     opcion3 db 13,10, "     ", 254, " [3] Buscar estudiante por posicion$"
-    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones$"
+    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones (Asc/Dec)$"
     opcion5 db 13,10, "     ", 254, " [5] Salir del programa$"
     opcion db " ",62,62,62, "  ", "Elija una opcion: $"
 
@@ -54,14 +56,14 @@ EXTRN contador_estudiantes:BYTE
     mensaje_despedida db 13,10, "                      ","[ GRACIAS POR USAR REGISTRO.CE ]", 13,10, "$"
     
     ; === MENSAJES ADICIONALES ===
-    msg_ordenar db 13,10, "Ordenar calificaciones en (A)scendente o (D)escendente? $"
-    msg_ordenado db 13,10, "Las calificaciones han sido ordenadas.$"
+    msg_ordenar db 13,10,"      ",196,196,196,196,196,196, "[ Ordenar calificaciones: (A)scendente | (D)escendente ]",196,196,196,196,196,196, "$"
+    msg_ordenado db "                   ",196,196,196,196,196,196,"[ CALIFICACIONES ORDENADAS ]",196,196,196,196,196,196, "$"
 
     ; === VARIABLES DEL SISTEMA ===
     opcion_elegida db ?
 
     ; === MENSAJES TEMPORALES ===
-    mensaje1 db 13,10, "FUNCIONALIDAD NO IMPLEMENTADA$"
+    mensaje1 db 13,10, " " ,"FUNCIONALIDAD NO IMPLEMENTADA$"
 
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
@@ -130,9 +132,7 @@ mostrar_estadisticas:
 
 ; etiqueta para buscar estudiante
 buscar_estudiante:
-    lea dx, mensaje1
-    call imprimir_cadena
-    call opcion_invalida
+    call buscar_estudiante_por_indice
     jmp menu_principal
 
 ; etiqueta para ordenar calificaciones
@@ -140,10 +140,17 @@ ordenar_calificaciones:
     ; mostrar mensaje para elegir el tipo de ordenamiento
     lea dx, msg_ordenar
     call imprimir_cadena
+    call salto_linea
+    call salto_linea
+
+    ; mostrar prompt con formato
+    lea dx, signo_prompt
+    call imprimir_cadena
 
     ; leer opcion del usuario (A/D)
     mov ah, 01h
     int 21h
+    call salto_linea
 
     cmp al, 'A'
     je ordenar_asc
@@ -174,6 +181,11 @@ ordenar_desc:
 mostrar_resultado:
     lea dx, msg_ordenado
     call imprimir_cadena
+    call salto_linea
+    call salto_linea
+    lea dx, linea_fina
+    call imprimir_cadena
+    call salto_linea
     jmp menu_principal
 
 ; etiqueta para salir del programa

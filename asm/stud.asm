@@ -40,7 +40,7 @@ EXTRN presionar_continuar:PROC
     nota_temporal db 10 dup(0)     ; buffer temporal para la nota
 
 .code
-PUBLIC ingresar_calificaciones
+PUBLIC ingresar_calificaciones, signo_prompt
 
 ; subrutina para ingresar calificaciones
 ingresar_calificaciones proc

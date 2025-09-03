@@ -8,9 +8,10 @@ MASM.EXE asm/main.asm;
 MASM.EXE asm/io.asm;
 MASM.EXE asm/data.asm;
 MASM.EXE asm/stud.asm;
+MASM.EXE asm/find.asm;
 
 echo Enlazando objetos...
-LINK main.obj io.obj stud.obj data.obj;
+LINK main.obj io.obj stud.obj data.obj find.obj;
 
 echo Ejecutando programa...
 MAIN.EXE
