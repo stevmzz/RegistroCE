@@ -17,6 +17,8 @@ EXTRN mostrar_banner:PROC
 EXTRN ingresar_calificaciones:PROC
 EXTRN notas_int:BYTE
 EXTRN contador_estudiantes:BYTE
+EXTRN buscar_estudiante_por_indice:PROC
+EXTRN signo_prompt:BYTE
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -39,7 +41,7 @@ EXTRN contador_estudiantes:BYTE
     opcion1 db 13,10, "     ", 254, " [1] Ingresar calificaciones (max. 15)$"
     opcion2 db 13,10, "     ", 254, " [2] Mostrar estadisticas$"
     opcion3 db 13,10, "     ", 254, " [3] Buscar estudiante por posicion$"
-    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones$"
+    opcion4 db 13,10, "     ", 254, " [4] Ordenar calificaciones (Asc/Dec)$"
     opcion5 db 13,10, "     ", 254, " [5] Salir del programa$"
     opcion db " ",62,62,62, "  ", "Elija una opcion: $"
 
@@ -54,14 +56,15 @@ EXTRN contador_estudiantes:BYTE
     mensaje_despedida db 13,10, "                      ","[ GRACIAS POR USAR REGISTRO.CE ]", 13,10, "$"
     
     ; === MENSAJES ADICIONALES ===
-    msg_ordenar db 13,10, "Ordenar calificaciones en (A)scendente o (D)escendente? $"
-    msg_ordenado db 13,10, "Las calificaciones han sido ordenadas.$"
+    msg_ordenar db 13,10,"      ",196,196,196,196,196,196, "[ Ordenar calificaciones: (A)scendente | (D)escendente ]",196,196,196,196,196,196, "$"
+    msg_ordenado db "                   ",196,196,196,196,196,196,"[ CALIFICACIONES ORDENADAS ]",196,196,196,196,196,196, "$"
+    msg_no_estudiantes db "                ",196,196,196,196,196,196,"[ NO HAY ESTUDIANTES REGISTRADOS ]",196,196,196,196,196,196, 13, 10, "$"
 
     ; === VARIABLES DEL SISTEMA ===
     opcion_elegida db ?
 
     ; === MENSAJES TEMPORALES ===
-    mensaje1 db 13,10, "FUNCIONALIDAD NO IMPLEMENTADA$"
+    mensaje1 db 13,10, " " ,"FUNCIONALIDAD NO IMPLEMENTADA$"
 
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
@@ -130,20 +133,29 @@ mostrar_estadisticas:
 
 ; etiqueta para buscar estudiante
 buscar_estudiante:
-    lea dx, mensaje1
-    call imprimir_cadena
-    call opcion_invalida
+    call buscar_estudiante_por_indice
     jmp menu_principal
 
 ; etiqueta para ordenar calificaciones
 ordenar_calificaciones:
+    ; verificar si hay estudiantes registrados
+    cmp contador_estudiantes, 0
+    je no_hay_estudiantes
+
     ; mostrar mensaje para elegir el tipo de ordenamiento
     lea dx, msg_ordenar
+    call imprimir_cadena
+    call salto_linea
+    call salto_linea
+
+    ; mostrar prompt con formato
+    lea dx, signo_prompt
     call imprimir_cadena
 
     ; leer opcion del usuario (A/D)
     mov ah, 01h
     int 21h
+    call salto_linea
 
     cmp al, 'A'
     je ordenar_asc
@@ -160,6 +172,16 @@ ordenar_calificaciones:
     ; si no se elige A/D, volver al menu
     jmp menu_principal
 
+; etiqueta por si no hay estudiantes registrados
+no_hay_estudiantes:
+    call salto_linea
+    lea dx, msg_no_estudiantes
+    call imprimir_cadena
+    call salto_linea
+    lea dx, linea_fina
+    call imprimir_cadena
+    jmp menu_principal
+
 ; === ORDEN ASCENDENTE ===
 ordenar_asc:
     call burbuja_asc
@@ -174,6 +196,12 @@ ordenar_desc:
 mostrar_resultado:
     lea dx, msg_ordenado
     call imprimir_cadena
+    call salto_linea
+    call mostrar_notas_ordenadas
+    call salto_linea
+    lea dx, linea_fina
+    call imprimir_cadena
+    call salto_linea
     jmp menu_principal
 
 ; etiqueta para salir del programa
@@ -288,5 +316,123 @@ fin_burbuja_desc:
     pop cx
     ret
 burbuja_desc endp
+
+mostrar_notas_ordenadas proc
+    push ax
+    push bx
+    push cx
+    push si
+    push dx
+
+    ; verificar si hay estudiantes
+    cmp contador_estudiantes, 0
+    je fin_mostrar_notas
+
+    xor ch, ch                      ; limpiar parte alta
+    mov cl, contador_estudiantes    ; número de estudiantes
+    mov si, 0                       ; índice inicial
+
+bucle_mostrar_notas:
+    ; mostrar espacios iniciales para alinear
+    mov ah, 02h
+    mov dl, ' '
+    int 21h
+    mov dl, ' '
+    int 21h
+    mov dl, ' '
+    int 21h
+    mov dl, ' '
+    int 21h
+    mov dl, ' '
+    int 21h
+    
+    ; cargar nota actual - CORREGIDO
+    mov bx, si
+    mov al, [notas_int + bx]        ; sin byte ptr
+    
+nota_valida:
+    ; convertir y mostrar la nota
+    call convertir_y_mostrar_nota
+    
+siguiente_nota:
+    ; salto de línea después de cada nota
+    call salto_linea
+    
+    ; siguiente nota
+    inc si
+    dec cl
+    jnz bucle_mostrar_notas
+
+fin_mostrar_notas:
+    pop dx
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    ret
+mostrar_notas_ordenadas endp
+
+convertir_y_mostrar_nota proc
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ah, 0          ; limpiar parte alta
+    mov bl, 100        ; divisor para centenas
+    
+    ; verificar si es >= 100
+    cmp al, 100
+    jb menor_que_100
+    
+    ; mostrar "100"
+    mov ah, 02h
+    mov dl, '1'
+    int 21h
+    mov dl, '0'
+    int 21h
+    mov dl, '0'
+    int 21h
+    jmp fin_conversion
+
+menor_que_100:
+    mov bl, 10         ; divisor para decenas
+    mov ah, 0          ; limpiar parte alta
+    div bl             ; al = cociente (decenas), ah = residuo (unidades)
+    
+    mov cl, ah         ; guardar unidades en cl
+    
+    ; verificar si hay decenas
+    cmp al, 0
+    je solo_unidades
+    
+    ; mostrar decena
+    add al, '0'        ; convertir a ASCII
+    mov ah, 02h
+    mov dl, al
+    int 21h
+    
+    ; mostrar unidad
+    mov al, cl
+    add al, '0'
+    mov dl, al
+    int 21h
+    jmp fin_conversion
+
+solo_unidades:
+    ; mostrar solo la unidad
+    mov al, cl
+    add al, '0'
+    mov ah, 02h
+    mov dl, al
+    int 21h
+
+fin_conversion:
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+convertir_y_mostrar_nota endp
 
 end main

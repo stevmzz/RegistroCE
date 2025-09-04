@@ -40,7 +40,7 @@ EXTRN presionar_continuar:PROC
     nota_temporal db 10 dup(0)     ; buffer temporal para la nota
 
 .code
-PUBLIC ingresar_calificaciones
+PUBLIC ingresar_calificaciones, signo_prompt
 
 ; subrutina para ingresar calificaciones
 ingresar_calificaciones proc
@@ -466,12 +466,10 @@ nota_str_copiada:
     ; almacenar en array notas_int
     mov al, contador_estudiantes
     xor ah, ah
-    mov bx, 1 ; cada entrada son 2 bytes (word)
-    mul bx
-    mov si, ax ; guardar offset
+    mov bx, 1
+    mov bx, ax
     
     ; dx contiene el numero convertido de convertir_nota_a_entero
-    mov bx, si
     mov byte ptr [notas_int + bx], dl
 
     pop cx
