@@ -34,6 +34,17 @@
     msg_formato_incorrecto db "    ",196,196,196,196,196,196,"[ FORMATO INCORRECTO. USE: Nombre Apellido1 Apellido2 Nota ]",196,196,196,196,196,196, 13, 10, "$"
     msg_nota_invalida db "            ",196,196,196,196,196,196,"[ NOTA INVALIDA. Debe estar entre 0 y 100 ]",196,196,196,196,196,196, 13, 10, "$"
 
+    ; Variables para búsqueda
+    msg_buscar_prompt db " ",62,62,62," ","Que estudiante desea mostrar (1-15): $"
+    msg_estudiante_no_existe db "            ",196,196,196,196,196,196,"[ ESTUDIANTE NO EXISTE ]",196,196,196,196,196,196, 13, 10, "$"
+    msg_indice_invalido db "         ",196,196,196,196,196,196,"[ INDICE INVALIDO. Use numeros del 1 al 15 ]",196,196,196,196,196,196, 13, 10, "$"
+
+    buffer_indice db 3
+                db ?
+                db 3 dup(0)
+
+    indice_usuario db 0
+
 ; === VARIABLES PUBLICAS ===
 PUBLIC entry_estudiantes, nombres_completos, notas_str, notas_int
 PUBLIC contador_estudiantes, buffer_entrada, buffer_temp
