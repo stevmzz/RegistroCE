@@ -135,9 +135,7 @@ mostrar_estadisticas:
     cmp contador_estudiantes, 0
     je no_hay_estudiantes
 
-    ; Mostrar estadisticas  
-    lea dx, mensaje1
-    call imprimir_cadena  
+    ; Mostrar estadisticas   
     call promedio
     call imprimir_cadena
     call maximo
