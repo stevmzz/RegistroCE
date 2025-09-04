@@ -466,12 +466,10 @@ nota_str_copiada:
     ; almacenar en array notas_int
     mov al, contador_estudiantes
     xor ah, ah
-    mov bx, 1 ; cada entrada son 2 bytes (word)
-    mul bx
-    mov si, ax ; guardar offset
+    mov bx, 1
+    mov bx, ax
     
     ; dx contiene el numero convertido de convertir_nota_a_entero
-    mov bx, si
     mov byte ptr [notas_int + bx], dl
 
     pop cx
