@@ -19,6 +19,9 @@ EXTRN notas_int:BYTE
 EXTRN contador_estudiantes:BYTE
 EXTRN buscar_estudiante_por_indice:PROC
 EXTRN signo_prompt:BYTE
+EXTRN burbuja_asc:PROC
+EXTRN burbuja_desc:PROC
+EXTRN mostrar_notas_ordenadas:PROC
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -74,7 +77,7 @@ EXTRN signo_prompt:BYTE
 
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
-PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1
+PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1, convertir_y_mostrar_nota
 
 .code
 main proc
@@ -159,7 +162,7 @@ promedio:
 maximo:
     jmp mostrar_maximo
 minimo:
-    jmp mostrar_minimo
+    jmp mostrar_min
 aprobados:
     jmp mostrar_aprobados
 desaprobados:
@@ -258,7 +261,6 @@ mostrar_resultado:
     call salto_linea
     lea dx, linea_fina
     call imprimir_cadena
-    call salto_linea
     jmp menu_principal
 
 ; etiqueta para salir del programa
@@ -276,158 +278,6 @@ salir_programa:
     int 21h
 
 main endp
-
-; =========================================================
-; SUBRUTINAS DE ORDENAMIENTO - ALGORITMO BURBUJA
-; =========================================================
-
-; --- BURBUJA ASCENDENTE ---
-; Ordena el arreglo "notas" de menor a mayor
-burbuja_asc proc
-    push cx
-    push bx
-    push si
-    push di
-    push ax
-
-    mov cl, contador_estudiantes    ; número de estudiantes
-    dec cl                          ; n-1 pasadas
-    jz fin_burbuja_asc              ; si solo hay 1 estudiante, salir
-
-bucle_externo_asc:
-    mov si, 0                       ; índice = 0
-    mov ch, cl                      ; comparaciones en esta pasada
-
-bucle_interno_asc:
-    ; cargar notas_int[si] y notas_int[si+1]
-    mov bx, si
-    mov al, byte ptr [notas_int + bx]      ; al = notas_int[i]
-    mov dl, byte ptr [notas_int + bx + 1]  ; dl = notas_int[i+1]
-    
-    cmp al, dl
-    jbe no_swap_asc
-
-    ; --- swap ---
-    mov byte ptr [notas_int + bx], dl
-    mov byte ptr [notas_int + bx + 1], al
-
-no_swap_asc:
-    inc si                          ; siguiente índice
-    dec ch
-    jnz bucle_interno_asc
-
-    dec cl
-    jnz bucle_externo_asc
-
-fin_burbuja_asc:
-    pop ax
-    pop di
-    pop si
-    pop bx
-    pop cx
-    ret
-burbuja_asc endp
-
-; --- BURBUJA DESCENDENTE ---
-; Ordena el arreglo "notas" de mayor a menor
-burbuja_desc proc
-    push cx
-    push bx
-    push si
-    push di
-    push ax
-
-    mov cl, contador_estudiantes    ; número de estudiantes
-    dec cl                          ; n-1 pasadas
-    jz fin_burbuja_desc             ; si solo hay 1 estudiante, salir
-
-bucle_externo_desc:
-    mov si, 0                       ; índice = 0
-    mov ch, cl                      ; comparaciones en esta pasada
-
-bucle_interno_desc:
-    mov bx, si
-    mov al, byte ptr [notas_int + bx]      ; al = notas_int[i]
-    mov dl, byte ptr [notas_int + bx + 1]  ; dl = notas_int[i+1]
-    
-    cmp al, dl
-    jae no_swap_desc
-
-    ; --- swap ---
-    mov byte ptr [notas_int + bx], dl
-    mov byte ptr [notas_int + bx + 1], al
-
-no_swap_desc:
-    inc si                      ; siguiente par
-    dec ch
-    jnz bucle_interno_desc
-
-    dec cl
-    jnz bucle_externo_desc
-
-fin_burbuja_desc:
-    pop ax
-    pop di
-    pop si
-    pop bx
-    pop cx
-    ret
-burbuja_desc endp
-
-mostrar_notas_ordenadas proc
-    push ax
-    push bx
-    push cx
-    push si
-    push dx
-
-    ; verificar si hay estudiantes
-    cmp contador_estudiantes, 0
-    je fin_mostrar_notas
-
-    xor ch, ch                      ; limpiar parte alta
-    mov cl, contador_estudiantes    ; número de estudiantes
-    mov si, 0                       ; índice inicial
-
-bucle_mostrar_notas:
-    ; mostrar espacios iniciales para alinear
-    mov ah, 02h
-    mov dl, ' '
-    int 21h
-    mov dl, ' '
-    int 21h
-    mov dl, ' '
-    int 21h
-    mov dl, ' '
-    int 21h
-    mov dl, ' '
-    int 21h
-    
-    ; cargar nota actual - CORREGIDO
-    mov bx, si
-    mov al, [notas_int + bx]        ; sin byte ptr
-    
-nota_valida:
-    ; convertir y mostrar la nota
-    call convertir_y_mostrar_nota
-    
-siguiente_nota:
-    ; salto de línea después de cada nota
-    call salto_linea
-    
-    ; siguiente nota
-    inc si
-    dec cl
-    jnz bucle_mostrar_notas
-
-fin_mostrar_notas:
-    pop dx
-    pop si
-    pop cx
-    pop bx
-    pop ax
-    ret
-mostrar_notas_ordenadas endp
 
 convertir_y_mostrar_nota proc
     push ax
