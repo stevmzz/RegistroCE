@@ -63,6 +63,7 @@ EXTRN signo_prompt:BYTE
     msg_min db 13,10, "     ", 254, "Minimo: ", "$"
     msg_aprobado db 13,10, "     ", 254, "Aprobados Cantidad: ", "$"
     msg_desaprobado db 13,10, "     ", 254, "Desaprobados Cantidad: ", "$"
+
     msg_no_estudiantes db "                ",196,196,196,196,196,196,"[ NO HAY ESTUDIANTES REGISTRADOS ]",196,196,196,196,196,196, 13, 10, "$"
 
     ; === VARIABLES DEL SISTEMA ===
