@@ -58,6 +58,12 @@ EXTRN signo_prompt:BYTE
     ; === MENSAJES ADICIONALES ===
     msg_ordenar db 13,10,"      ",196,196,196,196,196,196, "[ Ordenar calificaciones: (A)scendente | (D)escendente ]",196,196,196,196,196,196, "$"
     msg_ordenado db "                   ",196,196,196,196,196,196,"[ CALIFICACIONES ORDENADAS ]",196,196,196,196,196,196, "$"
+    msg_promedio db 13,10, "     ", 254, "Promedio: ", "$"
+    msg_max db 13,10, "     ", 254, "Maximo: ", "$"
+    msg_min db 13,10, "     ", 254, "Minimo: ", "$"
+    msg_aprobado db 13,10, "     ", 254, "Aprobados Cantidad: ", "$"
+    msg_desaprobado db 13,10, "     ", 254, "Desaprobados Cantidad: ", "$"
+
     msg_no_estudiantes db "                ",196,196,196,196,196,196,"[ NO HAY ESTUDIANTES REGISTRADOS ]",196,196,196,196,196,196, 13, 10, "$"
 
     ; === VARIABLES DEL SISTEMA ===
@@ -126,15 +132,66 @@ ingresar_estudiantes:
 
 ; etiqueta para mostrar estadisticas
 mostrar_estadisticas:
-    lea dx, mensaje1
+    ; verificar si hay estudiantes registrados
+    cmp contador_estudiantes, 0
+    je no_hay_estudiantes
+
+    ; Mostrar estadisticas   
+    call promedio
     call imprimir_cadena
+    call maximo
+    call imprimir_cadena
+    call minimo
+    call imprimir_cadena
+    call aprobados
+    call imprimir_cadena
+    call desaprobados
+    call imprimir_cadena
+    call salto_linea
+    lea dx, linea_fina
+    call imprimir_cadena
+    call salto_linea
     call opcion_invalida
     jmp menu_principal
+
+promedio:
+    jmp mostrar_promedio
+maximo:
+    jmp mostrar_maximo
+minimo:
+    jmp mostrar_minimo
+aprobados:
+    jmp mostrar_aprobados
+desaprobados:
+    jmp mostrar_desaprobados
+
+
+mostrar_promedio:
+    lea dx, msg_promedio
+    call imprimir_cadena
+
+mostrar_maximo:
+    lea dx, msg_max
+    call imprimir_cadena
+
+mostrar_min:
+    lea dx, msg_min
+    call imprimir_cadena
+
+mostrar_aprobados:
+    lea dx, msg_aprobado
+    call imprimir_cadena
+
+mostrar_desaprobados:
+    lea dx, msg_desaprobado
+    call imprimir_cadena
+
 
 ; etiqueta para buscar estudiante
 buscar_estudiante:
     call buscar_estudiante_por_indice
     jmp menu_principal
+
 
 ; etiqueta para ordenar calificaciones
 ordenar_calificaciones:
