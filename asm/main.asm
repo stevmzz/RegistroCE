@@ -229,7 +229,9 @@ ordenar_calificaciones:
     cmp al, 'd'
     je ordenar_desc
 
-    ; si no se elige A/D, volver al menu
+    call salto_linea
+    lea dx, linea_fina
+    call imprimir_cadena
     jmp menu_principal
 
 ; etiqueta por si no hay estudiantes registrados
@@ -256,6 +258,7 @@ ordenar_desc:
 mostrar_resultado:
     lea dx, msg_ordenado
     call imprimir_cadena
+    call salto_linea
     call salto_linea
     call mostrar_notas_ordenadas
     call salto_linea

@@ -25,6 +25,7 @@
                     db 100 dup(0)
 
     buffer_temp db 100 dup(0)
+    indices_ordenados db MAX_ESTUDIANTES dup(0)
 
     ; === MENSAJES DE LA FUNCION INGRESAR ===
     msg_ingresar_prompt db 196,196,196,196,196,196,196, "[ Ingrese su estudiante o digite 9 para salir al menu principal ]", 196,196,196,196,196,196,196,196, "$"
@@ -50,6 +51,6 @@ PUBLIC entry_estudiantes, nombres_completos, notas_str, notas_int
 PUBLIC contador_estudiantes, buffer_entrada, buffer_temp
 PUBLIC msg_ingresar_prompt, msg_estudiante_agregado, msg_limite_alcanzado
 PUBLIC msg_formato_incorrecto, msg_nota_invalida
-PUBLIC MAX_ESTUDIANTES, ENTRY_COMPLETO, NOMBRE_COMPLETO, NOTA_STR
+PUBLIC MAX_ESTUDIANTES, ENTRY_COMPLETO, NOMBRE_COMPLETO, NOTA_STR, indices_ordenados
 
 end
