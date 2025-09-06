@@ -13,7 +13,6 @@ RegistroCE es una aplicación de consola que permite gestionar calificaciones de
 - **Búsqueda**: Localización de estudiantes por posición en la lista
 - **Ordenamiento**: Organización ascendente o descendente por calificación
 - **Validación**: Verificación automática de formatos y rangos (0-100)
-- **Precisión**: Soporte para hasta 5 decimales en las calificaciones
 
 ## Requisitos del Sistema
 
