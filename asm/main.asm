@@ -22,6 +22,9 @@ EXTRN signo_prompt:BYTE
 EXTRN burbuja_asc:PROC
 EXTRN burbuja_desc:PROC
 EXTRN mostrar_notas_ordenadas:PROC
+EXTRN calcular_estadisticas:PROC   
+EXTRN mostrar_todas_estadisticas:PROC  
+EXTRN convertir_y_mostrar_nota:PROC   
 
 .data
     ; === MENSAJES DEL SISTEMA ===
@@ -61,11 +64,6 @@ EXTRN mostrar_notas_ordenadas:PROC
     ; === MENSAJES ADICIONALES ===
     msg_ordenar db 13,10,"      ",196,196,196,196,196,196, "[ Ordenar calificaciones: (A)scendente | (D)escendente ]",196,196,196,196,196,196, "$"
     msg_ordenado db "                   ",196,196,196,196,196,196,"[ CALIFICACIONES ORDENADAS ]",196,196,196,196,196,196, "$"
-    msg_promedio db 13,10, "     ", 254, "Promedio: ", "$"
-    msg_max db 13,10, "     ", 254, "Maximo: ", "$"
-    msg_min db 13,10, "     ", 254, "Minimo: ", "$"
-    msg_aprobado db 13,10, "     ", 254, "Aprobados Cantidad: ", "$"
-    msg_desaprobado db 13,10, "     ", 254, "Desaprobados Cantidad: ", "$"
 
     msg_no_estudiantes db "                ",196,196,196,196,196,196,"[ NO HAY ESTUDIANTES REGISTRADOS ]",196,196,196,196,196,196, 13, 10, "$"
 
@@ -77,7 +75,7 @@ EXTRN mostrar_notas_ordenadas:PROC
 
 ; variables publicas para que subrutinas las usen
 PUBLIC titulo, linea, linea_fina, linea_doble, opciones, opcion1, opcion2, opcion3, opcion4, opcion5, opcion
-PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1, convertir_y_mostrar_nota
+PUBLIC opcion_elegida, banner_l1, banner_l2, banner_l3, banner_l4, banner_l5, mensaje_despedida, mensaje1
 
 .code
 main proc
@@ -137,58 +135,16 @@ ingresar_estudiantes:
 mostrar_estadisticas:
     ; verificar si hay estudiantes registrados
     cmp contador_estudiantes, 0
-    je no_hay_estudiantes
-
-    ; Mostrar estadisticas   
-    call promedio
-    call imprimir_cadena
-    call maximo
-    call imprimir_cadena
-    call minimo
-    call imprimir_cadena
-    call aprobados
-    call imprimir_cadena
-    call desaprobados
-    call imprimir_cadena
+    je no_hay_estudianteS
+    ; calcular todas las estadísticas
+    call calcular_estadisticas
+    ; mostrar todas las estadísticas
+    call mostrar_todas_estadisticas
+    call salto_linea
     call salto_linea
     lea dx, linea_fina
     call imprimir_cadena
-    call salto_linea
-    call opcion_invalida
     jmp menu_principal
-
-promedio:
-    jmp mostrar_promedio
-maximo:
-    jmp mostrar_maximo
-minimo:
-    jmp mostrar_min
-aprobados:
-    jmp mostrar_aprobados
-desaprobados:
-    jmp mostrar_desaprobados
-
-
-mostrar_promedio:
-    lea dx, msg_promedio
-    call imprimir_cadena
-
-mostrar_maximo:
-    lea dx, msg_max
-    call imprimir_cadena
-
-mostrar_min:
-    lea dx, msg_min
-    call imprimir_cadena
-
-mostrar_aprobados:
-    lea dx, msg_aprobado
-    call imprimir_cadena
-
-mostrar_desaprobados:
-    lea dx, msg_desaprobado
-    call imprimir_cadena
-
 
 ; etiqueta para buscar estudiante
 buscar_estudiante:
@@ -281,68 +237,5 @@ salir_programa:
     int 21h
 
 main endp
-
-convertir_y_mostrar_nota proc
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov ah, 0          ; limpiar parte alta
-    mov bl, 100        ; divisor para centenas
-    
-    ; verificar si es >= 100
-    cmp al, 100
-    jb menor_que_100
-    
-    ; mostrar "100"
-    mov ah, 02h
-    mov dl, '1'
-    int 21h
-    mov dl, '0'
-    int 21h
-    mov dl, '0'
-    int 21h
-    jmp fin_conversion
-
-menor_que_100:
-    mov bl, 10         ; divisor para decenas
-    mov ah, 0          ; limpiar parte alta
-    div bl             ; al = cociente (decenas), ah = residuo (unidades)
-    
-    mov cl, ah         ; guardar unidades en cl
-    
-    ; verificar si hay decenas
-    cmp al, 0
-    je solo_unidades
-    
-    ; mostrar decena
-    add al, '0'        ; convertir a ASCII
-    mov ah, 02h
-    mov dl, al
-    int 21h
-    
-    ; mostrar unidad
-    mov al, cl
-    add al, '0'
-    mov dl, al
-    int 21h
-    jmp fin_conversion
-
-solo_unidades:
-    ; mostrar solo la unidad
-    mov al, cl
-    add al, '0'
-    mov ah, 02h
-    mov dl, al
-    int 21h
-
-fin_conversion:
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-convertir_y_mostrar_nota endp
 
 end main
